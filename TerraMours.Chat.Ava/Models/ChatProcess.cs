@@ -1,7 +1,6 @@
 ﻿using CsvHelper.Configuration;
 using CsvHelper;
 using Microsoft.EntityFrameworkCore;
-using OpenAI.ObjectModels.ResponseModels;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

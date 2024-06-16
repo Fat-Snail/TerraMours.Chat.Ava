@@ -4,8 +4,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using AvaloniaEdit.Utils;
 using FluentAvalonia.UI.Controls;
-using OpenAI.Managers;
-using OpenAI.ObjectModels.RequestModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
@@ -18,6 +16,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Octopus.Tools;
 using TerraMours.Chat.Ava.Models;
 using TerraMours.Chat.Ava.Models.Class;
 using TerraMours.Chat.Ava.Views;
@@ -362,30 +361,58 @@ namespace TerraMours.Chat.Ava.ViewModels {
                 VMLocator.ChatViewModel.ChatHistory.Add(userMessge);
                 await VMLocator.ChatDbcontext.ChatMessages.AddAsync(userMessge);
                 await VMLocator.ChatDbcontext.SaveChangesAsync();
-                //根据配置中的CONTEXT_COUNT 查询上下文
-                var messages = new List<OpenAI.ObjectModels.RequestModels.ChatMessage>();
-                messages.Add(OpenAI.ObjectModels.RequestModels.ChatMessage.FromUser(message));
-                var openAiOpetions = new OpenAI.OpenAiOptions()
+                
+                
+                // //根据配置中的CONTEXT_COUNT 查询上下文
+                // var messages = new List<OpenAI.ObjectModels.RequestModels.ChatMessage>();
+                // messages.Add(OpenAI.ObjectModels.RequestModels.ChatMessage.FromUser(message));
+                // var openAiOpetions = new OpenAI.OpenAiOptions()
+                // {
+                //     ApiKey = AppSettings.Instance.ApiKey,
+                //     BaseDomain = AppSettings.Instance.ApiUrl
+                // };
+                // var openAiService = new OpenAIService(openAiOpetions);
+                // //调用SDK
+                // var response = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+                // {
+                //     Messages = messages,
+                //     Model = AppSettings.Instance.ApiModel,
+                //     MaxTokens = AppSettings.Instance.ApiMaxTokensIsEnable ? AppSettings.Instance.ApiMaxTokens:null,
+                //     TopP = AppSettings.Instance.ApiTopPIsEnable ? (float?)AppSettings.Instance.ApiTopP:null,
+                //     N = AppSettings.Instance.ApiNIsEnable ? AppSettings.Instance.ApiN:null,
+                //     PresencePenalty = AppSettings.Instance.ApiPresencePenaltyIsEnable ? (float?)AppSettings.Instance.ApiPresencePenalty:null,
+                //     FrequencyPenalty= AppSettings.Instance.ApiFrequencyPenaltyIsEnable ? (float?)AppSettings.Instance.ApiFrequencyPenalty:null,
+                //     Stop = AppSettings.Instance.ApiStopIsEnable? AppSettings.Instance.ApiStop:null,
+                //     Temperature=AppSettings.Instance.ApiTemperatureIsEnable?(float?) AppSettings.Instance.ApiTemperature:null,
+                //     LogitBias= AppSettings.Instance.ApiLogitBiasIsEnable? AppSettings.Instance.ApiLogitBias:null,
+                // });
+                // if (response == null)
+                // {
+                //     var dialog = new ContentDialog()
+                //     {
+                //         Title = "接口调用失败",
+                //         PrimaryButtonText = "Ok"
+                //     };
+                //     await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
+                // }
+                // if (!response.Successful)
+                // {
+                //     var dialog = new ContentDialog()
+                //     {
+                //         Title = $"接口调用失败，报错内容: {response.Error.Message}",
+                //         PrimaryButtonText = "Ok",
+                //     };
+                //     await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
+                // }
+                var client = AIClient.CreateAiChat(conversationId.ToString());
+                var request = client.CreateNormalRequest(req =>
                 {
-                    ApiKey = AppSettings.Instance.ApiKey,
-                    BaseDomain = AppSettings.Instance.ApiUrl
-                };
-                var openAiService = new OpenAIService(openAiOpetions);
-                //调用SDK
-                var response = await openAiService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
-                {
-                    Messages = messages,
-                    Model = AppSettings.Instance.ApiModel,
-                    MaxTokens = AppSettings.Instance.ApiMaxTokensIsEnable ? AppSettings.Instance.ApiMaxTokens:null,
-                    TopP = AppSettings.Instance.ApiTopPIsEnable ? (float?)AppSettings.Instance.ApiTopP:null,
-                    N = AppSettings.Instance.ApiNIsEnable ? AppSettings.Instance.ApiN:null,
-                    PresencePenalty = AppSettings.Instance.ApiPresencePenaltyIsEnable ? (float?)AppSettings.Instance.ApiPresencePenalty:null,
-                    FrequencyPenalty= AppSettings.Instance.ApiFrequencyPenaltyIsEnable ? (float?)AppSettings.Instance.ApiFrequencyPenalty:null,
-                    Stop = AppSettings.Instance.ApiStopIsEnable? AppSettings.Instance.ApiStop:null,
-                    Temperature=AppSettings.Instance.ApiTemperatureIsEnable?(float?) AppSettings.Instance.ApiTemperature:null,
-                    LogitBias= AppSettings.Instance.ApiLogitBiasIsEnable? AppSettings.Instance.ApiLogitBias:null,
+                    req.Messages.Add(new CompletionMessage(){ Role = "user",Content = message });
                 });
-                if (response == null)
+                
+                var chatResponse = await client.CreateChatCompletionAsync(request);
+
+                if (chatResponse == null)
                 {
                     var dialog = new ContentDialog()
                     {
@@ -393,17 +420,10 @@ namespace TerraMours.Chat.Ava.ViewModels {
                         PrimaryButtonText = "Ok"
                     };
                     await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
+                    return;
                 }
-                if (!response.Successful)
-                {
-                    var dialog = new ContentDialog()
-                    {
-                        Title = $"接口调用失败，报错内容: {response.Error.Message}",
-                        PrimaryButtonText = "Ok",
-                    };
-                    await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
-                }
-                var assistant = new Models.ChatMessage() {  ConversationId = conversationId, Message = response.Choices.FirstOrDefault().Message.Content, Role = "Assistant", CreateDate = DateTime.Now };
+
+                var assistant = new Models.ChatMessage() {  ConversationId = conversationId, Message = chatResponse.Choices.FirstOrDefault().Message.Content, Role = "Assistant", CreateDate = DateTime.Now };
                 VMLocator.ChatViewModel.ChatHistory.Add(assistant);
                 await VMLocator.ChatDbcontext.ChatMessages.AddAsync(assistant);
                 await VMLocator.ChatDbcontext.SaveChangesAsync();

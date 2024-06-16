@@ -40,15 +40,15 @@ namespace TerraMours.Chat.Ava.Views {
         private void InitializeComponent() {
             AvaloniaXamlLoader.Load(this);
         }
-        #region ¼üÅÌ¼àÌı
+        #region ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½
         private async void MainWindow_KeyDown(object sender,KeyEventArgs e) {
             if(e.Key==Key.LeftAlt || e.Key == Key.RightAlt) {
-                //todo: Ìí¼ÓÂß¼­
+                //todo: ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
             }
         }
         #endregion
         /// <summary>
-        /// Òş²Ø¿í¶È
+        /// ï¿½ï¿½ï¿½Ø¿ï¿½ï¿½
         /// </summary>
         private double _previousWidth;
 
@@ -125,37 +125,51 @@ namespace TerraMours.Chat.Ava.Views {
             this.GetObservable(ClientSizeProperty).Subscribe(size => OnSizeChanged(size));
             _previousWidth = ClientSize.Width;
 
-            //Êı¾İ¼ÓÔØ
+            //ï¿½ï¿½ï¿½İ¼ï¿½ï¿½ï¿½
             VMLocator.DataGridViewModel.ChatList=VMLocator.ChatDbcontext.ChatLists.ToObservableCollection();
             VMLocator.ChatViewModel.ChatHistory = VMLocator.ChatDbcontext.ChatMessages.ToObservableCollection();
 
-            if (string.IsNullOrWhiteSpace(VMLocator.MainWindowViewModel.ApiKey)) {
-                var dialog = new ContentDialog() { Title = $"Please enter your API key.", PrimaryButtonText = "OK" };
-                await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
-                VMLocator.ChatViewModel.OpenApiSettings();
-            }
+            //å› ä¸ºæœ¬åœ°æ˜¯ä¸éœ€è¦Keyå€¼çš„
+            // if (string.IsNullOrWhiteSpace(VMLocator.MainWindowViewModel.ApiKey)) {
+            //     var dialog = new ContentDialog() { Title = $"Please enter your API key.", PrimaryButtonText = "OK" };
+            //     await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
+            //     VMLocator.ChatViewModel.OpenApiSettings();
+            // }
         }
 
-        #region ÏµÍ³ÅäÖÃ
-        private async Task<AppSettings> LoadAppSettingsAsync() {
+        #region ÏµÍ³ï¿½ï¿½ï¿½ï¿½
+
+        private async Task<AppSettings> LoadAppSettingsAsync()
+        {
             var settings = AppSettings.Instance;
 
             settings = new AppSettings();
 
-            if (File.Exists(Path.Combine(settings.AppDataPath, "settings.json"))) {
-                try {
+            if (File.Exists(Path.Combine(settings.AppDataPath, "settings.json")))
+            {
+                try
+                {
                     var options = new JsonSerializerOptions();
                     options.Converters.Add(new GridLengthConverter());
 
                     var jsonString = File.ReadAllText(Path.Combine(settings.AppDataPath, "settings.json"));
                     settings = JsonSerializer.Deserialize<AppSettings>(jsonString, options);
                 }
-                catch (Exception) {
-                    var dialog = new ContentDialog() { Title = $"Invalid setting file. Reset to default values.", PrimaryButtonText = "OK" };
+                catch (Exception)
+                {
+                    var dialog = new ContentDialog()
+                        { Title = $"Invalid setting file. Reset to default values.", PrimaryButtonText = "OK" };
                     await VMLocator.MainViewModel.ContentDialogShowAsync(dialog);
                     File.Delete(Path.Combine(settings.AppDataPath, "settings.json"));
                 }
             }
+
+            Octopus.Tools.AIClient.SetClientParams(s =>
+            {
+                s.ApiDomain = settings.ApiUrl?.Replace("/v1/chat/completions","");
+                s.ApiKey = settings.ApiKey;
+                s.DefaultModel = settings.ApiModel;
+            });
 
             return settings;
         }
@@ -178,7 +192,7 @@ namespace TerraMours.Chat.Ava.Views {
         }
         #endregion
 
-        #region ¹ú¼Ê»¯
+        #region ï¿½ï¿½ï¿½Ê»ï¿½
         public void Translate(string targetLanguage) {
             var translations = App.Current.Resources.MergedDictionaries.OfType<ResourceInclude>().FirstOrDefault(x => x.Source?.OriginalString?.Contains("/Lang/") ?? false);
 
@@ -193,7 +207,7 @@ namespace TerraMours.Chat.Ava.Views {
         }
         #endregion
 
-        #region ·½·¨
+        #region ï¿½ï¿½ï¿½ï¿½
         private void OnSizeChanged(Size newSize) {
             if (_previousWidth != newSize.Width) {
                 if (newSize.Width <= 1295) {

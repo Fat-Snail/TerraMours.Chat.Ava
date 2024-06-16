@@ -1,7 +1,5 @@
 ﻿using DynamicData;
 using FluentAvalonia.UI.Controls;
-using OpenAI.Managers;
-using OpenAI.ObjectModels.RequestModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;

@@ -1,0 +1,21 @@
+# Rider IDE
+.idea/
+*.iml
+
+# Build and dependency directories
+bin/
+obj/
+
+# User-specific files
+*.userprefs
+*.suo
+
+# Local development files
+*.local
+
+# Logs and temporary files
+logs/
+temp/
+
+# macOS specific
+.DS_Store
